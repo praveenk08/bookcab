@@ -1,0 +1,86 @@
+/* Notification Styles */
+
+/* Notification list container */
+.notification-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Unread notification styling */
+.notification-list .unread {
+    background-color: rgba(13, 110, 253, 0.05);
+    border-left: 3px solid #0d6efd;
+}
+
+/* Notification item spacing */
+.notification-list .list-group-item {
+    margin-bottom: 5px;
+    transition: all 0.2s ease;
+}
+
+.notification-list .list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Notification badge in navbar */
+.notification-badge {
+    position: relative;
+}
+
+.notification-badge .badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(25%, -25%);
+}
+
+/* Notification type badges */
+.notification-type-booking {
+    background-color: #0dcaf0;
+}
+
+.notification-type-payment {
+    background-color: #198754;
+}
+
+.notification-type-review {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.notification-type-system {
+    background-color: #6c757d;
+}
+
+.notification-type-vendor {
+    background-color: #0d6efd;
+}
+
+/* Empty notifications state */
+.empty-notifications {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.empty-notifications i {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+/* Notification actions */
+.notification-actions {
+    margin-top: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .notification-list {
+        max-height: 400px;
+    }
+    
+    .notification-actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}

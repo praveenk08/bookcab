@@ -80,6 +80,48 @@ class Booking extends CI_Controller {
                 // Log the action
                 $this->audit_model->log_action('booking', $booking_id, 'create', 'Booking created', $user_id);
                 
+                // Create notification for user
+                create_notification(
+                    $user_id,
+                    'booking',
+                    'Booking Created',
+                    'Your booking #' . $booking_id . ' has been created successfully and is pending approval.',
+                    $booking_id
+                );
+                
+                // Create notifications for vendors
+                $vendor_ids = [];
+                foreach ($booking_items as $item) {
+                    if (!in_array($item['vendor_id'], $vendor_ids)) {
+                        $vendor_ids[] = $item['vendor_id'];
+                        
+                        // Get vendor user ID
+                        $vendor = $this->vendor_model->get_vendor_by_id($item['vendor_id']);
+                        if ($vendor && $vendor->user_id) {
+                            create_notification(
+                                $vendor->user_id,
+                                'booking',
+                                'New Booking Received',
+                                'You have received a new booking #' . $booking_id . '. Please review and confirm.',
+                                $booking_id
+                            );
+                        }
+                    }
+                }
+                
+                // Create notification for admin
+                $admins = $this->user_model->get_users_by_role('admin');
+                if ($admins) {
+                    $admin_ids = array_column($admins, 'id');
+                    create_multiple_notifications(
+                        $admin_ids,
+                        'booking',
+                        'New Booking Created',
+                        'A new booking #' . $booking_id . ' has been created by a user.',
+                        $booking_id
+                    );
+                }
+                
                 // Clear cart
                 $this->session->unset_userdata('cart_items');
                 

@@ -99,6 +99,14 @@ $route['user/dashboard'] = 'user/dashboard';
 $route['user/bookings'] = 'user/bookings';
 $route['user/profile'] = 'user/profile';
 
+// Notification routes
+$route['notifications'] = 'notification/index';
+$route['notification'] = 'notification/index';
+$route['notification/mark_as_read/(:num)'] = 'notification/mark_as_read/$1';
+$route['notification/mark_all_as_read'] = 'notification/mark_all_as_read';
+$route['notification/delete/(:num)'] = 'notification/delete/$1';
+$route['notification/delete_all'] = 'notification/delete_all';
+
 // Admin routes
 $route['admin'] = 'admin/dashboard';
 $route['admin/dashboard'] = 'admin/dashboard';

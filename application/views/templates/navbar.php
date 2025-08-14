@@ -58,6 +58,9 @@
                             <?php endif; ?>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <?php $this->load->view('templates/notification_badge'); ?>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user"></i> <?php echo $this->session->userdata('name'); ?>

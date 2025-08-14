@@ -24,6 +24,14 @@
     <!-- jQuery (required for some Bootstrap components) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
+    <!-- Base URL for JavaScript -->
+    <script>
+        var base_url = '<?php echo base_url(); ?>';
+    </script>
+    
+    <!-- Notification JavaScript -->
+    <script src="<?php echo base_url('assets/js/notifications.js'); ?>"></script>
+    
     <!-- Custom JavaScript -->
     <script>
         // Initialize tooltips
