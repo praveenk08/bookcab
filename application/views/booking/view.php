@@ -34,7 +34,7 @@
                                 <li class="list-group-item"><strong>Booking ID:</strong> #<?php echo $booking->id; ?></li>
                                 <li class="list-group-item"><strong>Status:</strong> <?php echo $booking->status; ?></li>
                                 <li class="list-group-item"><strong>Created:</strong> <?php echo date('M d, Y h:i A', strtotime($booking->created_at)); ?></li>
-                                <li class="list-group-item"><strong>Total Price:</strong> ₹<?php echo number_format($booking->total_price); ?></li>
+                                <li class="list-group-item"><strong>Total Price:</strong> ₹<?php echo number_format($booking->total_amount); ?></li>
                             </ul>
                         </div>
                         <div class="col-md-6">
@@ -75,36 +75,36 @@
                                         <td><?php echo $item->vehicle_title; ?> (<?php echo $item->vehicle_type; ?>)</td>
                                         <td><?php echo $item->vendor_name; ?></td>
                                         <td>
-                                            <?php echo date('M d, Y', strtotime($item->date_from)); ?> to 
-                                            <?php echo date('M d, Y', strtotime($item->date_to)); ?>
+                                            <?php echo date('M d, Y', strtotime($item->start_date)); ?> to 
+                                            <?php echo date('M d, Y', strtotime($item->end_date)); ?>
                                             <br>
                                             <small class="text-muted">
                                                 <?php 
-                                                    $from_timestamp = strtotime($item->date_from);
-                                                    $to_timestamp = strtotime($item->date_to);
+                                                    $from_timestamp = strtotime($item->start_date);
+                                                    $to_timestamp = strtotime($item->end_date);
                                                     $days = ceil(($to_timestamp - $from_timestamp) / (60 * 60 * 24));
                                                     echo $days; 
                                                 ?> day(s)
                                             </small>
                                         </td>
-                                        <td><?php echo $item->qty; ?></td>
+                                        <td><?php // echo $item->qty; ?></td>
                                         <td>
                                             <?php if ($item->driver_id): ?>
                                                 <?php echo $item->driver_name; ?>
                                                 <br>
-                                                <small class="text-muted">License: <?php echo $item->driver_license; ?></small>
+                                                <small class="text-muted">License: <?php echo $item->license_number; ?></small>
                                             <?php else: ?>
                                                 <span class="badge bg-secondary">Not Assigned</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td>₹<?php echo number_format($item->price); ?></td>
+                                        <td>₹<?php echo number_format($item->total_price); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th colspan="5" class="text-end">Total:</th>
-                                    <th>₹<?php echo number_format($booking->total_price); ?></th>
+                                    <th>₹<?php echo number_format($booking->total_amount); ?></th>
                                 </tr>
                             </tfoot>
                         </table>

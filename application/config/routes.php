@@ -83,16 +83,25 @@ $route['vendor'] = 'vendor/dashboard';
 $route['vendor/dashboard'] = 'vendor/dashboard';
 $route['vendor/apply'] = 'vendor/apply';
 $route['vendor/profile'] = 'vendor/profile';
-$route['vendor/vehicles'] = 'vendor/vehicles';
+$route['vendor/vehicles'] = 'vendor/manage_vehicles';
 $route['vendor/add-vehicle'] = 'vendor/add_vehicle';
 $route['vendor/edit-vehicle/(:num)'] = 'vendor/edit_vehicle/$1';
 $route['vendor/delete-vehicle/(:num)'] = 'vendor/delete_vehicle/$1';
-$route['vendor/drivers'] = 'vendor/drivers';
+$route['vendor/manage-availability/(:num)'] = 'vendor/manage_availability/$1';
+$route['vendor/drivers'] = 'vendor/manage_drivers';
 $route['vendor/add-driver'] = 'vendor/add_driver';
 $route['vendor/edit-driver/(:num)'] = 'vendor/edit_driver/$1';
 $route['vendor/delete-driver/(:num)'] = 'vendor/delete_driver/$1';
 $route['vendor/bookings'] = 'vendor/bookings';
 $route['vendor/assign-drivers/(:num)'] = 'vendor/assign_drivers/$1';
+
+// Driver routes
+$route['driver/manage'] = 'driver/manage';
+$route['driver/search'] = 'driver/search';
+$route['driver/add'] = 'driver/add';
+$route['driver/edit/(:num)'] = 'driver/edit/$1';
+$route['driver/view/(:num)'] = 'driver/view/$1';
+$route['driver/delete/(:num)'] = 'driver/delete/$1';
 
 // User routes
 $route['user/dashboard'] = 'user/dashboard';
@@ -106,6 +115,14 @@ $route['notification/mark_as_read/(:num)'] = 'notification/mark_as_read/$1';
 $route['notification/mark_all_as_read'] = 'notification/mark_all_as_read';
 $route['notification/delete/(:num)'] = 'notification/delete/$1';
 $route['notification/delete_all'] = 'notification/delete_all';
+
+// Driver routes
+$route['driver/manage'] = 'driver/manage';
+$route['driver/add'] = 'driver/add';
+$route['driver/edit/(:num)'] = 'driver/edit/$1';
+$route['driver/view/(:num)'] = 'driver/view/$1';
+$route['driver/delete/(:num)'] = 'driver/delete/$1';
+$route['driver/assign/(:num)'] = 'driver/assign/$1';
 
 // Admin routes
 $route['admin'] = 'admin/dashboard';

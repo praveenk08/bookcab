@@ -1,28 +1,35 @@
 <div class="container">
     <div class="row mb-4">
         <div class="col-md-12">
-            <h1>Booking Details #<?php echo $booking->id; ?></h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>">Home</a></li>
-                    <li class="breadcrumb-item"><a href="<?php echo base_url('admin/dashboard'); ?>">Admin Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="<?php echo base_url('admin/bookings'); ?>">Booking Management</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo site_url(); ?>"><i class="fas fa-home me-1"></i>Home</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo site_url('admin/dashboard'); ?>"><i class="fas fa-tachometer-alt me-1"></i>Admin Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo site_url('admin/bookings'); ?>"><i class="fas fa-calendar-check me-1"></i>Booking Management</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Booking #<?php echo $booking->id; ?></li>
                 </ol>
             </nav>
+            <h1 class="mt-3 mb-3"><i class="fas fa-receipt me-2"></i>Booking Details #<?php echo $booking->id; ?></h1>
         </div>
     </div>
 
     <?php if ($this->session->flashdata('success')): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?php echo $this->session->flashdata('success'); ?>
+            <i class="fas fa-check-circle me-2"></i><?php echo $this->session->flashdata('success'); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
     
     <?php if ($this->session->flashdata('error')): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?php echo $this->session->flashdata('error'); ?>
+            <i class="fas fa-exclamation-circle me-2"></i><?php echo $this->session->flashdata('error'); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    
+    <?php if ($this->session->flashdata('otp_required')): ?>
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-key me-2"></i><?php echo $this->session->flashdata('otp_required'); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
@@ -144,17 +151,17 @@
                             
                             <div class="d-flex justify-content-end mt-3">
                                 <?php if ($booking->status == 'pending'): ?>
-                                    <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#confirmBookingModal">
+                                    <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#otpVerificationModal" data-action="confirm">
                                         <i class="fas fa-check me-1"></i> Confirm
                                     </button>
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelBookingModal">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#otpVerificationModal" data-action="cancel">
                                         <i class="fas fa-times me-1"></i> Cancel
                                     </button>
                                 <?php elseif ($booking->status == 'confirmed'): ?>
-                                    <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#completeBookingModal">
+                                    <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#otpVerificationModal" data-action="complete">
                                         <i class="fas fa-flag-checkered me-1"></i> Mark as Completed
                                     </button>
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelBookingModal">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#otpVerificationModal" data-action="cancel">
                                         <i class="fas fa-times me-1"></i> Cancel
                                     </button>
                                 <?php endif; ?>
@@ -308,17 +315,77 @@
         </div>
     </div>
 
+    <!-- OTP Verification Modal -->
+    <div class="modal fade" id="otpVerificationModal" tabindex="-1" aria-labelledby="otpVerificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="otpVerificationModalLabel"><i class="fas fa-shield-alt me-2"></i>Verification Required</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-key fa-3x text-primary mb-3"></i>
+                        <h4>Email Verification</h4>
+                        <p class="text-muted">We need to verify your identity before proceeding with this action.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="verification-email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="verification-email" value="<?php echo $this->session->userdata('email'); ?>" readonly>
+                        </div>
+                    </div>
+                    
+                    <button id="send-verification" class="btn btn-primary w-100" data-action="">Send Verification Code</button>
+                    
+                    <div id="otp-verification-container" class="d-none mt-4">
+                        <div class="text-center mb-3">
+                            <p>Enter the 6-digit code sent to your email</p>
+                            <div class="otp-input-container">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">Code expires in <span id="otp-countdown">10:00</span></small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button id="verify-otp" class="btn btn-success">Verify Code</button>
+                            <button id="resend-otp" class="btn btn-outline-secondary" disabled>Resend Code</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div id="action-buttons" class="d-none">
+                        <!-- Action buttons will be dynamically added here after OTP verification -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Confirm Modal -->
     <div class="modal fade" id="confirmBookingModal" tabindex="-1" aria-labelledby="confirmBookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="confirmBookingModalLabel">Confirm Booking</h5>
+                    <h5 class="modal-title" id="confirmBookingModalLabel"><i class="fas fa-check-circle me-2"></i>Confirm Booking</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <?php echo form_open('admin/change_booking_status/' . $booking->id); ?>
                     <input type="hidden" name="status" value="confirmed">
                     <div class="modal-body">
+                        <div class="alert alert-success">
+                            <i class="fas fa-shield-alt me-2"></i> Your identity has been verified successfully.
+                        </div>
                         <p>Are you sure you want to confirm booking <strong>#<?php echo $booking->id; ?></strong>?</p>
                         <div class="mb-3">
                             <label for="admin_note" class="form-label">Admin Note (Optional)</label>
@@ -327,7 +394,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Confirm Booking</button>
+                        <button type="submit" class="btn btn-success verification-required" disabled>Confirm Booking</button>
                     </div>
                 <?php echo form_close(); ?>
             </div>
@@ -336,15 +403,18 @@
     
     <!-- Complete Modal -->
     <div class="modal fade" id="completeBookingModal" tabindex="-1" aria-labelledby="completeBookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="completeBookingModalLabel">Mark Booking as Completed</h5>
+                    <h5 class="modal-title" id="completeBookingModalLabel"><i class="fas fa-flag-checkered me-2"></i>Mark Booking as Completed</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <?php echo form_open('admin/change_booking_status/' . $booking->id); ?>
                     <input type="hidden" name="status" value="completed">
                     <div class="modal-body">
+                        <div class="alert alert-success">
+                            <i class="fas fa-shield-alt me-2"></i> Your identity has been verified successfully.
+                        </div>
                         <p>Are you sure you want to mark booking <strong>#<?php echo $booking->id; ?></strong> as completed?</p>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i> This will allow the customer to leave reviews for the vendors and vehicles.
@@ -356,7 +426,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Mark as Completed</button>
+                        <button type="submit" class="btn btn-primary verification-required" disabled>Mark as Completed</button>
                     </div>
                 <?php echo form_close(); ?>
             </div>
@@ -365,15 +435,18 @@
     
     <!-- Cancel Modal -->
     <div class="modal fade" id="cancelBookingModal" tabindex="-1" aria-labelledby="cancelBookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="cancelBookingModalLabel">Cancel Booking</h5>
+                    <h5 class="modal-title" id="cancelBookingModalLabel"><i class="fas fa-times-circle me-2"></i>Cancel Booking</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <?php echo form_open('admin/change_booking_status/' . $booking->id); ?>
                     <input type="hidden" name="status" value="cancelled">
                     <div class="modal-body">
+                        <div class="alert alert-success">
+                            <i class="fas fa-shield-alt me-2"></i> Your identity has been verified successfully.
+                        </div>
                         <p>Are you sure you want to cancel booking <strong>#<?php echo $booking->id; ?></strong>?</p>
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i> This will release all reserved vehicles and notify the customer and vendors.
@@ -385,10 +458,51 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-danger">Cancel Booking</button>
+                        <button type="submit" class="btn btn-danger verification-required" disabled>Cancel Booking</button>
                     </div>
                 <?php echo form_close(); ?>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Handle OTP verification modal actions
+    document.addEventListener('DOMContentLoaded', function() {
+        const otpModal = document.getElementById('otpVerificationModal');
+        const actionButtons = document.getElementById('action-buttons');
+        const sendVerificationBtn = document.getElementById('send-verification');
+        
+        // Set action when opening the modal
+        document.querySelectorAll('[data-bs-target="#otpVerificationModal"]').forEach(button => {
+            button.addEventListener('click', function() {
+                const action = this.getAttribute('data-action');
+                sendVerificationBtn.setAttribute('data-action', action);
+                
+                // Clear previous verification state
+                document.getElementById('otp-verification-container').classList.add('d-none');
+                actionButtons.classList.add('d-none');
+                actionButtons.innerHTML = '';
+            });
+        });
+        
+        // After successful verification, show the appropriate action modal
+        document.getElementById('verify-otp').addEventListener('click', function() {
+            // This is handled in the otp-verification.js file
+            // After verification, we'll add a handler to show the appropriate modal
+            const action = sendVerificationBtn.getAttribute('data-action');
+            
+            // Add action buttons based on the action type
+            actionButtons.innerHTML = `
+                <button type="button" class="btn btn-${action === 'confirm' ? 'success' : (action === 'complete' ? 'primary' : 'danger')}" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#${action}BookingModal">
+                    Proceed to ${action.charAt(0).toUpperCase() + action.slice(1)}
+                </button>
+            `;
+            
+            // Show action buttons
+            actionButtons.classList.remove('d-none');
+        });
+    });
+</script>

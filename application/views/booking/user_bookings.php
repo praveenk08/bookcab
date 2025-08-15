@@ -62,7 +62,7 @@
                                                     echo '</small>';
                                                 ?>
                                             </td>
-                                            <td>₹<?php echo number_format($booking->total_price); ?></td>
+                                            <td>₹<?php echo number_format($booking->total_amount); ?></td>
                                             <td>
                                                 <span class="badge bg-<?php 
                                                     echo $booking->status === 'PENDING' ? 'warning' : 

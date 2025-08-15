@@ -191,7 +191,8 @@ class Booking extends CI_Controller {
         
         // Get user bookings
         $data['bookings'] = $this->booking_model->get_user_bookings($user_id);
-        
+                // echo "<pre>"; print_r($data); die;
+
         $this->load->view('templates/header');
         $this->load->view('booking/user_bookings', $data);
         $this->load->view('templates/footer');

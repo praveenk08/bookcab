@@ -22,39 +22,39 @@
                 <div class="card-body">
                     <div class="text-center mb-3">
                         <?php 
-                            $images = json_decode($vehicle->images, true);
-                            if (!empty($images)) {
-                                echo '<img src="' . base_url('uploads/vehicles/' . $images[0]) . '" alt="' . $vehicle->title . '" class="img-fluid rounded" style="max-height: 200px;">';
+                            $images = isset($vehicle->images) ? json_decode($vehicle->images, true) : null;
+                            if (!empty($images) && is_array($images) && isset($images[0]) && file_exists(FCPATH . 'uploads/vehicles/' . $images[0])) {
+                                echo '<img src="' . base_url('uploads/vehicles/' . $images[0]) . '" alt="' . htmlspecialchars($vehicle->title) . '" class="img-fluid rounded" style="max-height: 200px;">';
                             } else {
                                 echo '<div class="bg-light text-center p-5"><i class="fas fa-car fa-3x text-muted"></i></div>';
                             }
                         ?>
                     </div>
                     
-                    <h5 class="card-title"><?php echo $vehicle->title; ?></h5>
+                    <h5 class="card-title"><?php echo htmlspecialchars($vehicle->title ?? ''); ?></h5>
                     <p class="card-text">
-                        <span class="badge bg-info"><?php echo $vehicle->type; ?></span>
-                        <span class="badge bg-secondary"><?php echo $vehicle->capacity; ?> persons</span>
+                        <span class="badge bg-info"><?php echo htmlspecialchars($vehicle->type ?? ''); ?></span>
+                        <span class="badge bg-secondary"><?php echo htmlspecialchars($vehicle->seats ?? $vehicle->capacity ?? 0); ?> persons</span>
                     </p>
                     
                     <ul class="list-group list-group-flush mb-3">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             Price per day
-                            <span>₹<?php echo number_format($vehicle->fixed_price); ?></span>
+                            <span>₹<?php echo number_format($vehicle->price_per_day ?? $vehicle->fixed_price ?? 0); ?></span>
                         </li>
-                        <?php if ($vehicle->fuel_charge > 0): ?>
+                        <?php if (isset($vehicle->fuel_charge) && $vehicle->fuel_charge > 0): ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 Fuel charge
-                                <span>₹<?php echo number_format($vehicle->fuel_charge); ?></span>
+                                <span>₹<?php echo number_format($vehicle->fuel_charge_per_km ?? $vehicle->fuel_charge ?? 0); ?></span>
                             </li>
                         <?php endif; ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             Total units
-                            <span><?php echo $vehicle->quantity; ?></span>
+                            <span><?php echo isset($vehicle->quantity) ? $vehicle->quantity : 1; ?></span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             Status
-                            <?php if ($vehicle->is_active): ?>
+                            <?php if (isset($vehicle->is_active) && $vehicle->is_active): ?>
                                 <span class="badge bg-success">Active</span>
                             <?php else: ?>
                                 <span class="badge bg-danger">Inactive</span>

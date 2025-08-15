@@ -32,6 +32,9 @@
     <!-- Notification JavaScript -->
     <script src="<?php echo base_url('assets/js/notifications.js'); ?>"></script>
     
+    <!-- OTP Verification JavaScript -->
+    <script src="<?php echo base_url('assets/js/otp-verification.js'); ?>"></script>
+    
     <!-- Custom JavaScript -->
     <script>
         // Initialize tooltips

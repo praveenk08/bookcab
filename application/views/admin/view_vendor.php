@@ -47,7 +47,7 @@
                                     <th style="width: 30%">Business Name:</th>
                                     <td>
                                         <?php echo $vendor->business_name; ?>
-                                        <?php if($vendor->is_verified): ?>
+                                        <?php if(isset($vendor->is_verified) && $vendor->is_verified): ?>
                                             <span class="badge bg-info ms-1" data-bs-toggle="tooltip" title="Verified Business"><i class="fas fa-check-circle"></i> Verified</span>
                                         <?php endif; ?>
                                     </td>

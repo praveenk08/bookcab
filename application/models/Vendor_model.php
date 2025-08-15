@@ -103,12 +103,118 @@ class Vendor_model extends CI_Model {
      */
     public function count_vendors($filters = []) {
         $this->db->from('vendors');
+        $this->db->join('users', 'users.id = vendors.user_id', 'left');
         
         if (!empty($filters)) {
-            $this->db->where($filters);
+            // Handle search filter separately
+            if (isset($filters['search']) && !empty($filters['search'])) {
+                $search = $filters['search'];
+                unset($filters['search']);
+                
+                $this->db->group_start();
+                $this->db->like('vendors.business_name', $search);
+                $this->db->or_like('users.name', $search);
+                $this->db->or_like('users.email', $search);
+                $this->db->or_like('vendors.phone', $search);
+                $this->db->or_like('vendors.city', $search);
+                $this->db->group_end();
+            }
+            
+            // Apply other filters with table prefixes to avoid ambiguity
+            if (!empty($filters)) {
+                // Fix for ambiguous status column
+                if (isset($filters['status'])) {
+                    $status = $filters['status'];
+                    unset($filters['status']);
+                    $this->db->where('vendors.status', $status);
+                }
+                
+                if (!empty($filters)) {
+                    $this->db->where($filters);
+                }
+            }
         }
         
         return $this->db->count_all_results();
+    }
+    
+    /**
+     * Get vendors for DataTables with filtering, sorting and pagination
+     * 
+     * @param array $filters Optional filters including search
+     * @param int $limit Limit results
+     * @param int $offset Offset for pagination
+     * @param string $order_by Column to order by
+     * @param string $order_dir Order direction (asc/desc)
+     * @return array Array of vendor objects
+     */
+    public function get_vendors_datatable($filters = [], $limit = NULL, $offset = NULL, $order_by = 'id', $order_dir = 'desc') {
+        // Select vendor data and join with users table
+        $this->db->select('vendors.*, users.name as user_name, users.email as user_email, users.phone as user_phone');
+        $this->db->from('vendors');
+        $this->db->join('users', 'users.id = vendors.user_id', 'left');
+        
+        // Get vehicle count for each vendor
+        $this->db->select('(SELECT COUNT(*) FROM vehicles WHERE vehicles.vendor_id = vendors.id) as vehicle_count');
+        
+        if (!empty($filters)) {
+            // Handle search filter separately
+            if (isset($filters['search']) && !empty($filters['search'])) {
+                $search = $filters['search'];
+                unset($filters['search']);
+                
+                $this->db->group_start();
+                $this->db->like('vendors.business_name', $search);
+                $this->db->or_like('users.name', $search);
+                $this->db->or_like('users.email', $search);
+                $this->db->or_like('vendors.phone', $search);
+                $this->db->or_like('vendors.city', $search);
+                $this->db->group_end();
+            }
+            
+            // Apply other filters with table prefixes to avoid ambiguity
+            if (!empty($filters)) {
+                // Fix for ambiguous status column
+                if (isset($filters['status'])) {
+                    $status = $filters['status'];
+                    unset($filters['status']);
+                    $this->db->where('vendors.status', $status);
+                }
+                
+                if (!empty($filters)) {
+                    $this->db->where($filters);
+                }
+            }
+        }
+        
+        // Apply ordering
+        if ($order_by == 'name') {
+            $this->db->order_by('users.name', $order_dir);
+        } else if ($order_by == 'vehicle_count') {
+            $this->db->order_by('vehicle_count', $order_dir);
+        } else {
+            $this->db->order_by('vendors.' . $order_by, $order_dir);
+        }
+        
+        // Apply limit and offset
+        if ($limit !== NULL && $offset !== NULL) {
+            $this->db->limit($limit, $offset);
+        }
+        
+        $query = $this->db->get();
+        $vendors = $query->result();
+        
+        // Ensure business_name and owner_name properties exist
+        foreach ($vendors as $vendor) {
+            if (!isset($vendor->business_name)) {
+                $vendor->business_name = 'Unknown Business';
+            }
+            if (!isset($vendor->owner_name)) {
+                $vendor->owner_name = $vendor->user_name ?? 'Unknown Owner';
+            }
+        }
+        
+        return $vendors;
     }
 
     /**

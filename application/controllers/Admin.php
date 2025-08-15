@@ -480,25 +480,138 @@ class Admin extends CI_Controller {
     }
     
     public function vendors() {
-        // Pagination config
-        $config['base_url'] = site_url('admin/vendors');
-        $config['total_rows'] = $this->vendor_model->count_vendors();
-        $config['per_page'] = 10;
-        $config['uri_segment'] = 3;
-        $config['use_page_numbers'] = TRUE;
+        // Get pending vendors count for notification badge
+        $data['pending_count'] = $this->vendor_model->count_vendors(['status' => 'pending']);
         
-        // Initialize pagination
-        $this->load->library('pagination');
-        $this->pagination->initialize($config);
+        // Check if this is a DataTable AJAX request
+        if ($this->input->is_ajax_request() && $this->input->get('draw')) {
+            $this->load->model('vendor_model');
+            
+            // DataTables parameters
+            $draw = $this->input->get('draw');
+            $start = $this->input->get('start');
+            $length = $this->input->get('length');
+            $search = $this->input->get('search')['value'];
+            $order_column = $this->input->get('order')[0]['column'];
+            $order_dir = $this->input->get('order')[0]['dir'];
+            
+            // Column names for ordering
+            $columns = array(
+                0 => 'id',
+                1 => 'business_name',
+                2 => 'name', // user_name
+                3 => 'phone',
+                4 => 'vehicle_count',
+                5 => 'created_at',
+                6 => 'status'
+            );
+            
+            // Build filter array
+            $filters = [];
+            
+            // Add status filter if provided
+            $status = $this->input->get('status');
+            if ($status) {
+                $filters['status'] = $status;
+            }
+            
+            // Get total records count
+            $total_records = $this->vendor_model->count_vendors($filters);
+            
+            // Add search filter if provided
+            if ($search) {
+                $filters['search'] = $search;
+            }
+            
+            // Get filtered records count
+            $filtered_records = $this->vendor_model->count_vendors($filters);
+            
+            // Get vendors with filters, limit, offset and ordering
+            $vendors = $this->vendor_model->get_vendors_datatable(
+                $filters,
+                $length,
+                $start,
+                $columns[$order_column],
+                $order_dir
+            );
+            
+            // Prepare data for DataTables
+            $data = [];
+            foreach ($vendors as $vendor) {
+                $row = [];
+                
+                // ID
+                $row[] = $vendor->id;
+                
+                // Business Name with verification badge
+                $business_name = '<strong>' . $vendor->business_name . '</strong>';
+                if (isset($vendor->is_verified) && $vendor->is_verified) {
+                    $business_name .= ' <span class="badge bg-info ms-1" data-bs-toggle="tooltip" title="Verified Business"><i class="fas fa-check-circle"></i></span>';
+                }
+                $row[] = $business_name;
+                
+                // Owner
+                $owner = $vendor->user_name;
+                $owner .= '<div class="small text-muted">' . $vendor->user_email . '</div>';
+                $row[] = $owner;
+                
+                // Contact
+                $contact = '<i class="fas fa-phone-alt me-1 text-muted"></i> ' . $vendor->phone . '<br>';
+                $contact .= '<i class="fas fa-map-marker-alt me-1 text-muted"></i> ' . $vendor->city;
+                $row[] = $contact;
+                
+                // Vehicles
+                $vehicles = isset($vendor->vehicle_count) ? 
+                    '<span class="badge bg-primary">' . $vendor->vehicle_count . ' vehicles</span>' : 
+                    '<span class="badge bg-secondary">0 vehicles</span>';
+                $row[] = $vehicles;
+                
+                // Applied On
+                $row[] = date('M d, Y', strtotime($vendor->created_at));
+                
+                // Status
+                $status = '';
+                if ($vendor->status == 'pending') {
+                    $status = '<span class="badge bg-warning text-dark">Pending</span>';
+                } elseif ($vendor->status == 'approved') {
+                    $status = '<span class="badge bg-success">Approved</span>';
+                } elseif ($vendor->status == 'rejected') {
+                    $status = '<span class="badge bg-danger">Rejected</span>';
+                }
+                $row[] = $status;
+                
+                // Actions
+                $actions = '<div class="btn-group" role="group">';
+                $actions .= '<a href="' . base_url('admin/view_vendor/' . $vendor->id) . '" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View Details"><i class="fas fa-eye"></i></a>';
+                
+                if ($vendor->status == 'pending') {
+                    $actions .= '<button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#approveVendorModal' . $vendor->id . '" title="Approve Vendor"><i class="fas fa-check"></i></button>';
+                    $actions .= '<button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectVendorModal' . $vendor->id . '" title="Reject Vendor"><i class="fas fa-times"></i></button>';
+                } elseif ($vendor->status == 'approved') {
+                    $actions .= '<button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectVendorModal' . $vendor->id . '" title="Reject Vendor"><i class="fas fa-ban"></i></button>';
+                } elseif ($vendor->status == 'rejected') {
+                    $actions .= '<button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#approveVendorModal' . $vendor->id . '" title="Approve Vendor"><i class="fas fa-check"></i></button>';
+                }
+                
+                $actions .= '</div>';
+                $row[] = $actions;
+                
+                $data[] = $row;
+            }
+            
+            // Prepare response for DataTables
+            $response = [
+                'draw' => intval($draw),
+                'recordsTotal' => $total_records,
+                'recordsFiltered' => $filtered_records,
+                'data' => $data
+            ];
+            
+            echo json_encode($response);
+            return;
+        }
         
-        // Get current page
-        $page = ($this->uri->segment(3)) ? $this->uri->segment(3) : 1;
-        $offset = ($page - 1) * $config['per_page'];
-        
-        // Get vendors
-        $data['vendors'] = $this->vendor_model->get_vendors([], $config['per_page'], $offset);
-        $data['pagination'] = $this->pagination->create_links();
-        
+        // Regular page load
         $this->load->view('templates/header');
         $this->load->view('admin/vendors', $data);
         $this->load->view('templates/footer');

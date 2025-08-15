@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS `drivers` (
   `license_number` varchar(50) NOT NULL,
   `experience_years` int(11) NOT NULL,
   `price_per_day` decimal(10,2) NOT NULL,
+  `address` text DEFAULT NULL,
   `license_document` varchar(255) DEFAULT NULL,
   `photo` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,

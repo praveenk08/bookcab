@@ -113,6 +113,73 @@ class Vehicle_model extends CI_Model {
         $this->db->update('vehicle_availability', ['quantity' => $quantity]);
         return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
     }
+    
+    /**
+     * Get vehicle availability by vehicle ID
+     * 
+     * @param int $vehicle_id Vehicle ID
+     * @param string $start_date Optional start date (Y-m-d)
+     * @param int $days Optional number of days to retrieve
+     * @return array Array of availability records
+     */
+    public function get_vehicle_availability($vehicle_id, $start_date = NULL, $days = 30) {
+        if ($start_date === NULL) {
+            $start_date = date('Y-m-d');
+        }
+        
+        $end_date = date('Y-m-d', strtotime($start_date . ' +' . ($days - 1) . ' days'));
+        
+        $this->db->where('vehicle_id', $vehicle_id);
+        $this->db->where('date >=', $start_date);
+        $this->db->where('date <=', $end_date);
+        $this->db->order_by('date', 'ASC');
+        $query = $this->db->get('vehicle_availability');
+        
+        // Create a full date range with all dates
+        $availability = [];
+        $current_date = $start_date;
+        
+        while (strtotime($current_date) <= strtotime($end_date)) {
+            $availability[$current_date] = NULL; // Default to NULL (no record)
+            $current_date = date('Y-m-d', strtotime($current_date . ' +1 day'));
+        }
+        
+        // Fill in actual availability data
+        foreach ($query->result() as $row) {
+            $availability[$row->date] = $row;
+        }
+        
+        return $availability;
+    }
+    
+    /**
+     * Get availability record by vehicle ID and date
+     * 
+     * @param int $vehicle_id Vehicle ID
+     * @param string $date Date (Y-m-d)
+     * @return object|bool Availability object on success, FALSE if not found
+     */
+    public function get_availability_by_vehicle_and_date($vehicle_id, $date) {
+        $query = $this->db->get_where('vehicle_availability', [
+            'vehicle_id' => $vehicle_id,
+            'date' => $date
+        ]);
+        
+        return ($query->num_rows() > 0) ? $query->row() : FALSE;
+    }
+    
+    /**
+     * Update availability record
+     * 
+     * @param int $id Availability ID
+     * @param array $data Availability data
+     * @return bool TRUE on success, FALSE on failure
+     */
+    public function update_availability($id, $data) {
+        $this->db->where('id', $id);
+        $this->db->update('vehicle_availability', $data);
+        return ($this->db->affected_rows() > 0) ? TRUE : FALSE;
+    }
 
     /**
      * Check vehicle availability for a specific date range
@@ -309,7 +376,7 @@ class Vehicle_model extends CI_Model {
         // Get vehicles with highest ratings or most bookings
         $this->db->select('vehicles.*');
         $this->db->from('vehicles');
-        $this->db->where('vehicles.status', 'active');
+        $this->db->where('vehicles.is_active', 1);
         
         // Order by rating if available, otherwise by newest
         $this->db->order_by('vehicles.rating', 'DESC');

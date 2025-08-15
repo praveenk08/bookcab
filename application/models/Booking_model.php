@@ -94,7 +94,7 @@ class Booking_model extends CI_Model {
      * @return array Array of booking item objects
      */
     public function get_booking_items($booking_id) {
-        $this->db->select('booking_items.*, vehicles.title as vehicle_title, vehicles.type as vehicle_type, vendors.business_name as vendor_name, drivers.name as driver_name');
+        $this->db->select('booking_items.*, vehicles.title as vehicle_title, vehicles.type as vehicle_type, vendors.business_name as vendor_name, drivers.name as driver_name, drivers.license_number');
         $this->db->from('booking_items');
         $this->db->join('vehicles', 'vehicles.id = booking_items.vehicle_id');
         $this->db->join('vendors', 'vendors.id = booking_items.vendor_id');

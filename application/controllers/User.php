@@ -28,11 +28,8 @@ class User extends CI_Controller {
         
         // Get user's bookings
         $data['bookings'] = $this->booking_model->get_user_bookings($user_id, 5); // Limit to 5 recent bookings
-        
         // Get recommended vehicles
         $data['recommended_vehicles'] = $this->vehicle_model->get_recommended_vehicles(4); // Limit to 4 vehicles
-
-
         
         // Load views
         $this->load->view('templates/header', $data);
@@ -47,7 +44,7 @@ class User extends CI_Controller {
         
         // Get all user's bookings
         $data['bookings'] = $this->booking_model->get_user_bookings($user_id);
-        
+
         // Load views
         $this->load->view('templates/header', $data);
         $this->load->view('templates/navbar', $data);

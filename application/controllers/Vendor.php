@@ -46,7 +46,7 @@ class Vendor extends CI_Controller {
             'total_revenue' => $this->calculate_vendor_revenue($vendor_id),
             'pending_bookings' => $this->count_pending_bookings($data['bookings'])
         ];
-        
+        // echo "<pre/>"; print_r($data); die();
         $this->load->view('templates/header');
         $this->load->view('vendor/dashboard', $data);
         $this->load->view('templates/footer');
@@ -644,5 +644,82 @@ class Vendor extends CI_Controller {
         }
         
         redirect('vendor/dashboard');
+    }
+    
+    public function manage_availability($vehicle_id) {
+        // Check if user is logged in and is a vendor
+        if (!$this->session->userdata('user_id') || $this->session->userdata('role') !== 'vendor') {
+            redirect('login');
+        }
+        
+        $vendor_id = $this->vendor_model->get_vendor_id_by_user_id($this->session->userdata('user_id'));
+        
+        if (!$vendor_id) {
+            redirect('vendor/apply');
+        }
+        
+        // Check if vehicle exists and belongs to vendor
+        $vehicle = $this->vehicle_model->get_vehicle_by_id($vehicle_id);
+        
+        if (!$vehicle || $vehicle->vendor_id != $vendor_id) {
+            $this->session->set_flashdata('error', 'Vehicle not found or you do not have permission to manage its availability.');
+            redirect('vendor/manage_vehicles');
+        }
+        
+        // Get vehicle availability for the next 30 days
+        $data['vehicle'] = $vehicle;
+        $data['availability'] = $this->vehicle_model->get_vehicle_availability($vehicle_id);
+        
+        // Handle form submission
+        if ($this->input->post()) {
+            $dates = $this->input->post('date');
+            $quantities = $this->input->post('quantity');
+            
+            if (!empty($dates) && is_array($dates) && !empty($quantities) && is_array($quantities)) {
+                $success = true;
+                
+                foreach ($dates as $index => $date) {
+                    if (isset($quantities[$index]) && !empty($date)) {
+                        $quantity = intval($quantities[$index]);
+                        if ($quantity < 0) $quantity = 0; // Ensure quantity is not negative
+                        
+                        $availability_data = [
+                            'vehicle_id' => $vehicle_id,
+                            'date' => $date,
+                            'quantity' => $quantity
+                        ];
+                        
+                        // Check if availability record exists
+                        $existing = $this->vehicle_model->get_availability_by_vehicle_and_date($vehicle_id, $date);
+                        
+                        if ($existing) {
+                            // Update existing record
+                            $result = $this->vehicle_model->update_availability($existing->id, $availability_data);
+                        } else {
+                            // Add new record
+                            $result = $this->vehicle_model->add_vehicle_availability($availability_data);
+                        }
+                        
+                        if (!$result) {
+                            $success = false;
+                        }
+                    }
+                }
+                
+                if ($success) {
+                    $this->session->set_flashdata('success', 'Vehicle availability updated successfully.');
+                } else {
+                    $this->session->set_flashdata('error', 'There was an error updating some availability records.');
+                }
+                
+                redirect('vendor/manage_availability/' . $vehicle_id);
+            } else {
+                $this->session->set_flashdata('error', 'Invalid form data submitted.');
+            }
+        }
+        
+        $this->load->view('templates/header');
+        $this->load->view('vendor/manage_availability', $data);
+        $this->load->view('templates/footer');
     }
 }
