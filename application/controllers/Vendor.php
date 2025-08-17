@@ -216,7 +216,7 @@ class Vendor extends CI_Controller {
             
             // Handle multiple image uploads
             $files = $_FILES;
-            $count = count($_FILES['vehicle_images']['name']);
+            $count = isset($_FILES['vehicle_images']['name']) && is_array($_FILES['vehicle_images']['name']) ? count($_FILES['vehicle_images']['name']) : 0;
 
            
             
@@ -244,7 +244,7 @@ class Vendor extends CI_Controller {
                 'seats' => $this->input->post('capacity'),
                 'price_per_day' => $this->input->post('fixed_price'),
                 'fuel_charge_per_km' => $this->input->post('fuel_charge'),
-                // 'images' => json_encode($images),
+                'images' => !empty($images) ? json_encode($images) : '[]',
                 'is_active' => 1
             ];
             // Save vehicle
@@ -254,7 +254,7 @@ class Vendor extends CI_Controller {
             
             if ($vehicle_id) {
                 // Add vehicle availability for next 30 days
-                $quantity = $this->input->post('quantity') ? $this->input->post('quantity') : 1;
+                $quantity = $this->input->post('quantity') !== false ? intval($this->input->post('quantity')) : 1;
                 
                 for ($i = 0; $i < 30; $i++) {
                     $date = date('Y-m-d', strtotime("+$i days"));
@@ -455,15 +455,15 @@ class Vendor extends CI_Controller {
                 
                 // Handle multiple image uploads
                 $files = $_FILES;
-                $count = count($_FILES['images']['name']);
+                $count = isset($_FILES['vehicle_images']['name']) && is_array($_FILES['vehicle_images']['name']) ? count($_FILES['vehicle_images']['name']) : 0;
                 
                 for ($i = 0; $i < $count; $i++) {
-                    if (!empty($_FILES['images']['name'][$i])) {
-                        $_FILES['image']['name'] = $files['images']['name'][$i];
-                        $_FILES['image']['type'] = $files['images']['type'][$i];
-                        $_FILES['image']['tmp_name'] = $files['images']['tmp_name'][$i];
-                        $_FILES['image']['error'] = $files['images']['error'][$i];
-                        $_FILES['image']['size'] = $files['images']['size'][$i];
+                    if (!empty($_FILES['vehicle_images']['name'][$i])) {
+                        $_FILES['image']['name'] = $files['vehicle_images']['name'][$i];
+                        $_FILES['image']['type'] = $files['vehicle_images']['type'][$i];
+                        $_FILES['image']['tmp_name'] = $files['vehicle_images']['tmp_name'][$i];
+                        $_FILES['image']['error'] = $files['vehicle_images']['error'][$i];
+                        $_FILES['image']['size'] = $files['vehicle_images']['size'][$i];
                         
                         if ($this->upload->do_upload('image')) {
                             $upload_data = $this->upload->data();
@@ -480,8 +480,8 @@ class Vendor extends CI_Controller {
             
             if ($result) {
                 // Update vehicle availability if quantity changed
-                if ($this->input->post('quantity')) {
-                    $quantity = $this->input->post('quantity');
+                if ($this->input->post('quantity') !== false) {
+                    $quantity = intval($this->input->post('quantity'));
                     $this->vehicle_model->update_vehicle_availability($id, $quantity);
                 }
                 
@@ -680,7 +680,7 @@ class Vendor extends CI_Controller {
                 
                 foreach ($dates as $index => $date) {
                     if (isset($quantities[$index]) && !empty($date)) {
-                        $quantity = intval($quantities[$index]);
+                        $quantity = isset($quantities[$index]) ? intval($quantities[$index]) : 0;
                         if ($quantity < 0) $quantity = 0; // Ensure quantity is not negative
                         
                         $availability_data = [

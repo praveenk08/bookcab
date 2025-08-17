@@ -17,6 +17,14 @@ class Seo_hook {
             return;
         }
         
+        // Get the current output
+        $output = $this->CI->output->get_output();
+        
+        // If output is empty, return without processing
+        if (empty($output)) {
+            return;
+        }
+        
         // Load URL helper if not already loaded
         if (!function_exists('base_url')) {
             $this->CI->load->helper('url');
@@ -45,10 +53,10 @@ class Seo_hook {
         $this->customize_meta_tags($meta);
         
         // Add meta tags to output
-        $this->add_meta_tags_to_output($meta);
+        $this->add_meta_tags_to_output($meta, $output);
         
         // Perform other basic tasks
-        $this->perform_basic_tasks();
+        $this->perform_basic_tasks($output);
     }
     
     /**
@@ -144,12 +152,25 @@ class Seo_hook {
      * Add meta tags to output
      * 
      * @param array $meta Meta tags array
+     * @param string $output Current output buffer content
+     * @return string Modified output with meta tags
      */
-    private function add_meta_tags_to_output($meta) {
+    private function add_meta_tags_to_output($meta, &$output) {
         // Set page title
         if (isset($meta['title'])) {
             $this->CI->output->set_header('X-Page-Title: ' . $meta['title']);
-            $this->CI->output->append_output('<script>document.title = "' . addslashes($meta['title']) . '";</script>');
+            
+            // Update title tag if it exists
+            $title_pattern = '/<title>(.*?)<\/title>/i';
+            $title_replacement = '<title>' . htmlspecialchars($meta['title']) . '</title>';
+            
+            if (preg_match($title_pattern, $output)) {
+                $output = preg_replace($title_pattern, $title_replacement, $output);
+            } else {
+                // If no title tag exists, add script to update it
+                $script = '<script>document.title = "' . addslashes($meta['title']) . '";</script>';
+                $output = str_replace('</head>', $script . '</head>', $output);
+            }
         }
         
         // Build meta tags HTML
@@ -192,33 +213,47 @@ class Seo_hook {
         
         // Add meta tags to output
         if (!empty($meta_html)) {
-            $this->CI->output->append_output('<script>document.addEventListener("DOMContentLoaded", function() {
-                var head = document.querySelector("head");
-                head.insertAdjacentHTML("beforeend", ' . json_encode($meta_html) . ');
-            });</script>');
+            // Insert meta tags directly into the head section
+            $head_pos = strpos($output, '</head>');
+            if ($head_pos !== false) {
+                $output = substr_replace($output, $meta_html, $head_pos, 0);
+            }
         }
+        
+        // Set the modified output
+        $this->CI->output->set_output($output);
+        
+        return $output;
     }
     
     /**
      * Perform basic tasks before page rendering
+     * 
+     * @param string $output Current output buffer content
+     * @return string Modified output
      */
-    private function perform_basic_tasks() {
+    private function perform_basic_tasks(&$output) {
         // Check for empty arrays and values to prevent errors
-        $this->handle_empty_values();
+        $this->handle_empty_values($output);
         
         // Add security headers
         $this->add_security_headers();
         
         // Add performance optimizations
         $this->add_performance_optimizations();
+        
+        return $output;
     }
     
     /**
      * Handle empty arrays and values to prevent errors
+     * 
+     * @param string $output Current output buffer content
+     * @return string Modified output
      */
-    private function handle_empty_values() {
+    private function handle_empty_values(&$output) {
         // Add error handling for common PHP notices
-        $this->CI->output->append_output('<script>
+        $error_script = '<script>
         // Global error handler for JavaScript
         window.onerror = function(message, source, lineno, colno, error) {
             console.error("Error: " + message);
@@ -240,7 +275,15 @@ class Seo_hook {
             
             return current === null || current === undefined ? defaultValue : current;
         }
-        </script>');
+        </script>';
+        
+        // Insert the script before the closing body tag
+        $body_pos = strpos($output, '</body>');
+        if ($body_pos !== false) {
+            $output = substr_replace($output, $error_script, $body_pos, 0);
+        }
+        
+        return $output;
     }
     
     /**

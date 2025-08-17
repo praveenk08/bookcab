@@ -143,8 +143,8 @@
                                                 <tr>
                                                     <td>#<?php echo $booking->id; ?></td>
                                                     <td>
-                                                        <?php echo date('M d, Y', strtotime($booking->pickup_date)); ?>
-                                                        <div class="small text-muted"><?php echo date('g:i A', strtotime($booking->pickup_time)); ?></div>
+                                                        <?php echo empty($booking->pickup_date) ? 'Not provided' : date('M d, Y', strtotime($booking->pickup_date)); ?>
+                                                        <div class="small text-muted"><?php echo empty($booking->pickup_time) ? 'Not provided' : date('g:i A', strtotime($booking->pickup_time)); ?></div>
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-primary"><?php echo $booking->vehicle_count; ?> vehicles</span>

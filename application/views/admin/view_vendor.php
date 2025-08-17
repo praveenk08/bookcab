@@ -1,3 +1,5 @@
+
+ <?php //echo "<pre/>";print_r($vendor);  print_r($vehicles);  die;?> 
 <div class="container">
     <div class="row mb-4">
         <div class="col-md-12">
@@ -54,19 +56,23 @@
                                 </tr>
                                 <tr>
                                     <th>Registration No:</th>
-                                    <td><?php echo $vendor->registration_no; ?></td>
+                                    <td><?php echo empty($vendor->business_license) ? 'Not provided' : $vendor->business_license; ?></td>
+
                                 </tr>
                                 <tr>
                                     <th>Business Type:</th>
-                                    <td><?php echo $vendor->business_type; ?></td>
+                                    <td><?php echo empty($vendor->business_type) ? 'Not provided' : $vendor->business_type; ?></td>
+
                                 </tr>
                                 <tr>
                                     <th>Address:</th>
-                                    <td><?php echo $vendor->address; ?></td>
+                                    <td><?php echo empty($vendor->address) ? 'Not provided' : $vendor->address; ?></td>
+
                                 </tr>
                                 <tr>
                                     <th>City:</th>
-                                    <td><?php echo $vendor->city; ?></td>
+                                    <td><?php echo empty($vendor->city) ? 'Not provided' : $vendor->city; ?></td>
+
                                 </tr>
                                 <tr>
                                     <th>State:</th>
@@ -294,6 +300,7 @@
                                 </thead>
                                 <tbody>
                                     <?php foreach ($vehicles as $vehicle): ?>
+
                                         <tr>
                                             <td>
                                                 <?php if (!empty($vehicle->images)): 
@@ -317,9 +324,10 @@
                                                 </a>
                                             </td>
                                             <td><?php echo $vehicle->type; ?></td>
-                                            <td><?php echo $vehicle->capacity; ?> persons</td>
-                                            <td>$<?php echo number_format($vehicle->price_per_day, 2); ?>/day</td>
-                                            <td><?php echo $vehicle->quantity; ?></td>
+                                            <td><?php echo empty($vehicle->capacity) ? 'Not provided' : $vehicle->capacity . ' persons'; ?></td>
+                                            <td><?php echo empty($vehicle->price_per_day) ? 'Not provided' : '$' . number_format($vehicle->price_per_day, 2) . '/day'; ?></td>
+                                            <td><?php echo empty($vehicle->quantity) ? 'Not provided' : $vehicle->quantity; ?></td>
+
                                             <td>
                                                 <?php if ($vehicle->is_active): ?>
                                                     <span class="badge bg-success">Active</span>
@@ -376,10 +384,11 @@
                                                     </div>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?php echo $driver->name; ?></td>
-                                            <td><?php echo $driver->phone; ?></td>
-                                            <td><?php echo $driver->license_no; ?></td>
-                                            <td><?php echo $driver->experience; ?> years</td>
+                                            <td><?php echo empty($driver->name) ? 'Not provided' : $driver->name; ?></td>
+                                            <td><?php echo empty($driver->phone) ? 'Not provided' : $driver->phone; ?></td>
+                                            <td><?php echo empty($driver->license_no) ? 'Not provided' : $driver->license_no; ?></td>
+
+                                            <td><?php echo empty($driver->experience) ? 'Not provided' : $driver->experience . ' years'; ?></td>
                                             <td>
                                                 <?php if ($driver->is_active): ?>
                                                     <span class="badge bg-success">Active</span>
@@ -433,10 +442,10 @@
                                                 <?php echo $booking->user_name; ?><br>
                                                 <small class="text-muted"><?php echo $booking->user_email; ?></small>
                                             </td>
-                                            <td><?php echo $booking->vehicle_count; ?> vehicles</td>
+                                            <td><?php echo empty($booking->vehicle_count) ? 'Not provided' : $booking->vehicle_count . ' vehicles'; ?></td>
                                             <td>
-                                                <?php echo date('M d, Y', strtotime($booking->from_date)); ?> -<br>
-                                                <?php echo date('M d, Y', strtotime($booking->to_date)); ?>
+                                                <?php echo empty($booking->from_date) ? 'Not provided' : date('M d, Y', strtotime($booking->from_date)); ?> -<br>
+                                                <?php echo empty($booking->to_date) ? 'Not provided' : date('M d, Y', strtotime($booking->to_date)); ?>
                                             </td>
                                             <td>$<?php echo number_format($booking->total_amount, 2); ?></td>
                                             <td>
